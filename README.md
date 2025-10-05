@@ -33,7 +33,6 @@ pg_dump -h localhost -U dnote -d dnote > dnote_backup.sql
 - Users & accounts
 - Books & notes
 - Sessions & tokens
-- Notifications & email preferences
 
 Full-text search index rebuilds automatically.
 

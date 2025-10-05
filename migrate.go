@@ -7,14 +7,12 @@ import (
 )
 
 type MigrationStats struct {
-	Users            int
-	Accounts         int
-	Books            int
-	Notes            int
-	Tokens           int
-	Sessions         int
-	Notifications    int
-	EmailPreferences int
+	Users    int
+	Accounts int
+	Books    int
+	Notes    int
+	Tokens   int
+	Sessions int
 }
 
 func migrate(pgDB, sqliteDB *sql.DB) error {
@@ -65,20 +63,6 @@ func migrate(pgDB, sqliteDB *sql.DB) error {
 	}
 	fmt.Printf("  Migrated %d sessions\n", stats.Sessions)
 
-	// Migrate notifications
-	fmt.Println("Migrating notifications...")
-	if err := migrateNotifications(pgDB, tx, &stats); err != nil {
-		return fmt.Errorf("migrating notifications: %w", err)
-	}
-	fmt.Printf("  Migrated %d notifications\n", stats.Notifications)
-
-	// Migrate email preferences
-	fmt.Println("Migrating email preferences...")
-	if err := migrateEmailPreferences(pgDB, tx, &stats); err != nil {
-		return fmt.Errorf("migrating email preferences: %w", err)
-	}
-	fmt.Printf("  Migrated %d email preferences\n", stats.EmailPreferences)
-
 	// Migrate notes (last so FTS triggers work)
 	fmt.Println("Migrating notes...")
 	if err := migrateNotes(pgDB, tx, &stats); err != nil {
@@ -93,14 +77,12 @@ func migrate(pgDB, sqliteDB *sql.DB) error {
 
 	// Print summary
 	fmt.Println("\nMigration Summary:")
-	fmt.Printf("  Users:            %d\n", stats.Users)
-	fmt.Printf("  Accounts:         %d\n", stats.Accounts)
-	fmt.Printf("  Books:            %d\n", stats.Books)
-	fmt.Printf("  Notes:            %d\n", stats.Notes)
-	fmt.Printf("  Tokens:           %d\n", stats.Tokens)
-	fmt.Printf("  Sessions:         %d\n", stats.Sessions)
-	fmt.Printf("  Notifications:    %d\n", stats.Notifications)
-	fmt.Printf("  Email Preferences: %d\n", stats.EmailPreferences)
+	fmt.Printf("  Users:    %d\n", stats.Users)
+	fmt.Printf("  Accounts: %d\n", stats.Accounts)
+	fmt.Printf("  Books:    %d\n", stats.Books)
+	fmt.Printf("  Notes:    %d\n", stats.Notes)
+	fmt.Printf("  Tokens:   %d\n", stats.Tokens)
+	fmt.Printf("  Sessions: %d\n", stats.Sessions)
 
 	return nil
 }
@@ -336,82 +318,6 @@ func migrateSessions(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 			return err
 		}
 		stats.Sessions++
-	}
-
-	return rows.Err()
-}
-
-func migrateNotifications(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
-	rows, err := pgDB.Query(`
-		SELECT id, created_at, updated_at, type, user_id
-		FROM notifications
-		ORDER BY id
-	`)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	stmt, err := tx.Prepare(`
-		INSERT INTO notifications (id, created_at, updated_at, type, user_id)
-		VALUES (?, ?, ?, ?, ?)
-	`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	for rows.Next() {
-		var id, userID int
-		var createdAt, updatedAt time.Time
-		var notifType string
-
-		if err := rows.Scan(&id, &createdAt, &updatedAt, &notifType, &userID); err != nil {
-			return err
-		}
-
-		if _, err := stmt.Exec(id, createdAt, updatedAt, notifType, userID); err != nil {
-			return err
-		}
-		stats.Notifications++
-	}
-
-	return rows.Err()
-}
-
-func migrateEmailPreferences(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
-	rows, err := pgDB.Query(`
-		SELECT id, created_at, updated_at, user_id, inactive_reminder, product_update
-		FROM email_preferences
-		ORDER BY id
-	`)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	stmt, err := tx.Prepare(`
-		INSERT INTO email_preferences (id, created_at, updated_at, user_id, inactive_reminder, product_update)
-		VALUES (?, ?, ?, ?, ?, ?)
-	`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	for rows.Next() {
-		var id, userID int
-		var createdAt, updatedAt time.Time
-		var inactiveReminder, productUpdate bool
-
-		if err := rows.Scan(&id, &createdAt, &updatedAt, &userID, &inactiveReminder, &productUpdate); err != nil {
-			return err
-		}
-
-		if _, err := stmt.Exec(id, createdAt, updatedAt, userID, inactiveReminder, productUpdate); err != nil {
-			return err
-		}
-		stats.EmailPreferences++
 	}
 
 	return rows.Err()
