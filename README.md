@@ -10,8 +10,22 @@ This tool migrates data from **Dnote server v2.x** (PostgreSQL) to **Dnote serve
 
 ## Installation
 
+### Pre-built binaries
+
+Download pre-built binaries from the [releases page](https://github.com/dnote/dnote-pg2sqlite/releases).
+
+### From source
+
 ```bash
 go install github.com/dnote/dnote-pg2sqlite@latest
+```
+
+### Build from source
+
+```bash
+git clone https://github.com/dnote/dnote-pg2sqlite.git
+cd dnote-pg2sqlite
+make build
 ```
 
 ## Usage
@@ -61,4 +75,3 @@ After migration:
 
 1. Check the tool's output for record counts
 2. Start Dnote v3 and verify login works
-3. Verify notes and search work correctly
