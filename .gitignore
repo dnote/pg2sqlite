@@ -1,0 +1,4 @@
+dnote-pg2sqlite
+*.db
+*.db-shm
+*.db-wal
