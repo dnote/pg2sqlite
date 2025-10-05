@@ -185,25 +185,7 @@ func TestMigration(t *testing.T) {
 	sqlitePath := "/tmp/dnote_test.db"
 	os.Remove(sqlitePath) // Clean up any existing test db
 
-	// Create SQLite schema using GORM AutoMigrate
-	sqliteDB, err := gorm.Open(sqlite.Open(sqlitePath), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("Failed to open SQLite: %v", err)
-	}
-
-	// AutoMigrate SQLite models
-	if err := sqliteDB.AutoMigrate(
-		&SqliteUser{},
-		&SqliteAccount{},
-		&SqliteBook{},
-		&SqliteNote{},
-		&SqliteToken{},
-		&SqliteSession{},
-	); err != nil {
-		t.Fatalf("Failed to migrate SQLite schema: %v", err)
-	}
-
-	// Run migration
+	// Run migration (will create schema automatically)
 	config := Config{
 		PgHost:     pgHost,
 		PgPort:     pgPort,
@@ -215,6 +197,12 @@ func TestMigration(t *testing.T) {
 
 	if err := run(config); err != nil {
 		t.Fatalf("Migration failed: %v", err)
+	}
+
+	// Open SQLite with GORM for verification
+	sqliteDB, err := gorm.Open(sqlite.Open(sqlitePath), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open SQLite for verification: %v", err)
 	}
 
 	// Verify SQLite data using GORM

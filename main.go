@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type Config struct {
@@ -61,6 +64,19 @@ func validate(c Config) error {
 }
 
 func run(config Config) error {
+	// Create directory if it doesn't exist
+	dir := filepath.Dir(config.SqlitePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("creating database directory at %s: %w", dir, err)
+	}
+
+	// Check if SQLite file already exists
+	if _, err := os.Stat(config.SqlitePath); err == nil {
+		return fmt.Errorf("SQLite database already exists at %s - refusing to overwrite. Please remove the file or choose a different path", config.SqlitePath)
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("checking if SQLite file exists: %w", err)
+	}
+
 	// Connect to PostgreSQL
 	pgDSN := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 		config.PgHost, config.PgPort, config.PgDatabase, config.PgUser, config.PgPassword)
@@ -77,7 +93,7 @@ func run(config Config) error {
 
 	fmt.Println("Connected to PostgreSQL")
 
-	// Connect to SQLite
+	// Connect to SQLite with GORM
 	sqliteDB, err := sql.Open("sqlite3", config.SqlitePath)
 	if err != nil {
 		return fmt.Errorf("opening SQLite: %w", err)
@@ -90,6 +106,33 @@ func run(config Config) error {
 
 	fmt.Println("Connected to SQLite")
 
+	// Initialize SQLite schema using GORM
+	fmt.Println("Creating SQLite schema...")
+	if err := initSQLiteSchema(config.SqlitePath); err != nil {
+		return fmt.Errorf("initializing SQLite schema: %w", err)
+	}
+
 	// Run migration
 	return migrate(pgDB, sqliteDB)
+}
+
+func initSQLiteSchema(sqlitePath string) error {
+	db, err := gorm.Open(sqlite.Open(sqlitePath), &gorm.Config{})
+	if err != nil {
+		return fmt.Errorf("opening SQLite with GORM: %w", err)
+	}
+
+	// AutoMigrate SQLite models
+	if err := db.AutoMigrate(
+		&SqliteUser{},
+		&SqliteAccount{},
+		&SqliteBook{},
+		&SqliteNote{},
+		&SqliteToken{},
+		&SqliteSession{},
+	); err != nil {
+		return fmt.Errorf("running AutoMigrate: %w", err)
+	}
+
+	return nil
 }
