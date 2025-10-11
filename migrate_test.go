@@ -266,9 +266,6 @@ func TestMigration(t *testing.T) {
 	if sqliteAccount1.Email.String != account1.Email.String {
 		t.Errorf("Account1 Email: expected %s, got %s", account1.Email.String, sqliteAccount1.Email.String)
 	}
-	if sqliteAccount1.EmailVerified != account1.EmailVerified {
-		t.Errorf("Account1 EmailVerified: expected %v, got %v", account1.EmailVerified, sqliteAccount1.EmailVerified)
-	}
 	if sqliteAccount1.Password.String != account1.Password.String {
 		t.Errorf("Account1 Password: expected %s, got %s", account1.Password.String, sqliteAccount1.Password.String)
 	}
@@ -286,9 +283,6 @@ func TestMigration(t *testing.T) {
 	}
 	if sqliteAccount2.Email.String != account2.Email.String {
 		t.Errorf("Account2 Email: expected %s, got %s", account2.Email.String, sqliteAccount2.Email.String)
-	}
-	if sqliteAccount2.EmailVerified != account2.EmailVerified {
-		t.Errorf("Account2 EmailVerified: expected %v, got %v", account2.EmailVerified, sqliteAccount2.EmailVerified)
 	}
 
 	// Verify book1

@@ -129,7 +129,7 @@ func migrateUsers(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 
 func migrateAccounts(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 	rows, err := pgDB.Query(`
-		SELECT id, created_at, updated_at, user_id, email, email_verified, password
+		SELECT id, created_at, updated_at, user_id, email, password
 		FROM accounts
 		ORDER BY id
 	`)
@@ -139,8 +139,8 @@ func migrateAccounts(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 	defer rows.Close()
 
 	stmt, err := tx.Prepare(`
-		INSERT INTO accounts (id, created_at, updated_at, user_id, email, email_verified, password)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO accounts (id, created_at, updated_at, user_id, email, password)
+		VALUES (?, ?, ?, ?, ?, ?)
 	`)
 	if err != nil {
 		return err
@@ -151,13 +151,12 @@ func migrateAccounts(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 		var id, userID int
 		var createdAt, updatedAt time.Time
 		var email, password sql.NullString
-		var emailVerified bool
 
-		if err := rows.Scan(&id, &createdAt, &updatedAt, &userID, &email, &emailVerified, &password); err != nil {
+		if err := rows.Scan(&id, &createdAt, &updatedAt, &userID, &email, &password); err != nil {
 			return err
 		}
 
-		if _, err := stmt.Exec(id, createdAt, updatedAt, userID, email, emailVerified, password); err != nil {
+		if _, err := stmt.Exec(id, createdAt, updatedAt, userID, email, password); err != nil {
 			return err
 		}
 		stats.Accounts++

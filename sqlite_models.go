@@ -62,10 +62,9 @@ func (SqliteUser) TableName() string {
 
 type SqliteAccount struct {
 	SqliteModel
-	UserID        int        `gorm:"index"`
-	Email         NullString
-	EmailVerified bool       `gorm:"default:false"`
-	Password      NullString
+	UserID   int        `gorm:"index"`
+	Email    NullString
+	Password NullString
 }
 
 func (SqliteAccount) TableName() string {
