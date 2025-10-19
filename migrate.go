@@ -177,8 +177,8 @@ func migrateBooks(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 	defer rows.Close()
 
 	stmt, err := tx.Prepare(`
-		INSERT INTO books (id, created_at, updated_at, uuid, user_id, label, added_on, edited_on, usn, deleted, encrypted)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO books (id, created_at, updated_at, uuid, user_id, label, added_on, edited_on, usn, deleted)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 	if err != nil {
 		return err
@@ -192,11 +192,12 @@ func migrateBooks(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 		var uuid, label string
 		var deleted, encrypted bool
 
+		// Read encrypted from Postgres but don't write it to SQLite
 		if err := rows.Scan(&id, &createdAt, &updatedAt, &uuid, &userID, &label, &addedOn, &editedOn, &usn, &deleted, &encrypted); err != nil {
 			return err
 		}
 
-		if _, err := stmt.Exec(id, createdAt, updatedAt, uuid, userID, label, addedOn, editedOn, usn, deleted, encrypted); err != nil {
+		if _, err := stmt.Exec(id, createdAt, updatedAt, uuid, userID, label, addedOn, editedOn, usn, deleted); err != nil {
 			return err
 		}
 		stats.Books++
@@ -217,8 +218,8 @@ func migrateNotes(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 	defer rows.Close()
 
 	stmt, err := tx.Prepare(`
-		INSERT INTO notes (id, created_at, updated_at, uuid, user_id, book_uuid, body, added_on, edited_on, public, usn, deleted, encrypted, client)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO notes (id, created_at, updated_at, uuid, user_id, book_uuid, body, added_on, edited_on, public, usn, deleted, client)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 	if err != nil {
 		return err
@@ -232,11 +233,12 @@ func migrateNotes(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 		var uuid, bookUUID, body, client string
 		var public, deleted, encrypted bool
 
+		// Read encrypted from Postgres but don't write it to SQLite
 		if err := rows.Scan(&id, &createdAt, &updatedAt, &uuid, &userID, &bookUUID, &body, &addedOn, &editedOn, &public, &usn, &deleted, &encrypted, &client); err != nil {
 			return err
 		}
 
-		if _, err := stmt.Exec(id, createdAt, updatedAt, uuid, userID, bookUUID, body, addedOn, editedOn, public, usn, deleted, encrypted, client); err != nil {
+		if _, err := stmt.Exec(id, createdAt, updatedAt, uuid, userID, bookUUID, body, addedOn, editedOn, public, usn, deleted, client); err != nil {
 			return err
 		}
 		stats.Notes++

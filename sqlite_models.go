@@ -18,11 +18,10 @@ type SqliteBook struct {
 	UserID    int          `json:"user_id" gorm:"index"`
 	Label     string       `json:"label" gorm:"index"`
 	Notes     []SqliteNote `json:"notes" gorm:"foreignKey:BookUUID;references:UUID"`
-	AddedOn   int64        `json:"added_on"`
-	EditedOn  int64        `json:"edited_on"`
-	USN       int          `json:"-" gorm:"index"`
-	Deleted   bool         `json:"-" gorm:"default:false"`
-	Encrypted bool         `json:"-" gorm:"default:false"`
+	AddedOn  int64 `json:"added_on"`
+	EditedOn int64 `json:"edited_on"`
+	USN      int   `json:"-" gorm:"index"`
+	Deleted  bool  `json:"-" gorm:"default:false"`
 }
 
 func (SqliteBook) TableName() string {
@@ -37,11 +36,10 @@ type SqliteNote struct {
 	Body      string `json:"content"`
 	AddedOn   int64  `json:"added_on"`
 	EditedOn  int64  `json:"edited_on"`
-	Public    bool   `json:"public" gorm:"default:false"`
-	USN       int    `json:"-" gorm:"index"`
-	Deleted   bool   `json:"-" gorm:"default:false"`
-	Encrypted bool   `json:"-" gorm:"default:false"`
-	Client    string `gorm:"index"`
+	Public  bool   `json:"public" gorm:"default:false"`
+	USN     int    `json:"-" gorm:"index"`
+	Deleted bool   `json:"-" gorm:"default:false"`
+	Client  string `gorm:"index"`
 }
 
 func (SqliteNote) TableName() string {

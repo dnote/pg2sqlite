@@ -314,9 +314,6 @@ func TestMigration(t *testing.T) {
 	if sqliteBook1.Deleted != book1.Deleted {
 		t.Errorf("Book1 Deleted: expected %v, got %v", book1.Deleted, sqliteBook1.Deleted)
 	}
-	if sqliteBook1.Encrypted != book1.Encrypted {
-		t.Errorf("Book1 Encrypted: expected %v, got %v", book1.Encrypted, sqliteBook1.Encrypted)
-	}
 	if sqliteBook1.CreatedAt.Unix() != book1.CreatedAt.Unix() {
 		t.Errorf("Book1 CreatedAt: expected %v, got %v", book1.CreatedAt, sqliteBook1.CreatedAt)
 	}
@@ -358,9 +355,6 @@ func TestMigration(t *testing.T) {
 	}
 	if sqliteNote1.Deleted != note1.Deleted {
 		t.Errorf("Note1 Deleted: expected %v, got %v", note1.Deleted, sqliteNote1.Deleted)
-	}
-	if sqliteNote1.Encrypted != note1.Encrypted {
-		t.Errorf("Note1 Encrypted: expected %v, got %v", note1.Encrypted, sqliteNote1.Encrypted)
 	}
 	if sqliteNote1.Client != note1.Client {
 		t.Errorf("Note1 Client: expected %s, got %s", note1.Client, sqliteNote1.Client)
