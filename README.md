@@ -54,7 +54,7 @@ pg_dump -h localhost -U dnote -d dnote > dnote_backup.sql
 
 ## What Gets Migrated
 
-- Users & accounts
+- Users
 - Books & notes
 - Sessions & tokens
 
