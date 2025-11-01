@@ -125,7 +125,6 @@ func initSQLiteSchema(sqlitePath string) error {
 	// AutoMigrate SQLite models
 	if err := db.AutoMigrate(
 		&SqliteUser{},
-		&SqliteAccount{},
 		&SqliteBook{},
 		&SqliteNote{},
 		&SqliteToken{},

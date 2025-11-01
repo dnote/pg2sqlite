@@ -48,25 +48,16 @@ func (SqliteNote) TableName() string {
 
 type SqliteUser struct {
 	SqliteModel
-	UUID        string         `json:"uuid" gorm:"type:text;index"`
-	Account     SqliteAccount  `gorm:"foreignKey:UserID"`
-	LastLoginAt *time.Time     `json:"-"`
-	MaxUSN      int            `json:"-" gorm:"default:0"`
+	UUID           string     `json:"uuid" gorm:"type:text;index"`
+	Email          NullString `gorm:"index"`
+	Password       NullString `json:"-"`
+	LastLoginAt    *time.Time `json:"-"`
+	MaxUSN         int        `json:"-" gorm:"default:0"`
+	FullSyncBefore int64      `json:"-" gorm:"default:0"`
 }
 
 func (SqliteUser) TableName() string {
 	return "users"
-}
-
-type SqliteAccount struct {
-	SqliteModel
-	UserID   int        `gorm:"index"`
-	Email    NullString
-	Password NullString
-}
-
-func (SqliteAccount) TableName() string {
-	return "accounts"
 }
 
 type SqliteToken struct {

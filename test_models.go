@@ -56,11 +56,11 @@ func (PgNote) TableName() string {
 
 type PgUser struct {
 	PgModel
-	UUID        string      `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
-	Account     PgAccount   `gorm:"foreignKey:UserID"`
-	LastLoginAt *time.Time  `json:"-"`
-	MaxUSN      int         `json:"-" gorm:"default:0"`
-	Cloud       bool        `json:"-" gorm:"default:false"`
+	UUID        string     `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
+	Account     PgAccount  `gorm:"foreignKey:UserID"`
+	LastLoginAt *time.Time `json:"-"`
+	MaxUSN      int        `json:"-" gorm:"default:0"`
+	Cloud       bool       `json:"-" gorm:"default:false"`
 }
 
 func (PgUser) TableName() string {

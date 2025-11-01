@@ -233,6 +233,13 @@ func TestMigration(t *testing.T) {
 	if sqliteUser1.MaxUSN != user1.MaxUSN {
 		t.Errorf("User1 MaxUSN: expected %d, got %d", user1.MaxUSN, sqliteUser1.MaxUSN)
 	}
+	// Verify email/password from account were merged into user
+	if sqliteUser1.Email.String != account1.Email.String {
+		t.Errorf("User1 Email: expected %s, got %s", account1.Email.String, sqliteUser1.Email.String)
+	}
+	if sqliteUser1.Password.String != account1.Password.String {
+		t.Errorf("User1 Password: expected %s, got %s", account1.Password.String, sqliteUser1.Password.String)
+	}
 
 	// Verify user2
 	var sqliteUser2 SqliteUser
@@ -251,38 +258,8 @@ func TestMigration(t *testing.T) {
 	if sqliteUser2.MaxUSN != user2.MaxUSN {
 		t.Errorf("User2 MaxUSN: expected %d, got %d", user2.MaxUSN, sqliteUser2.MaxUSN)
 	}
-
-	// Verify account1
-	var sqliteAccount1 SqliteAccount
-	if err := sqliteDB.Where("user_id = ?", user1.ID).First(&sqliteAccount1).Error; err != nil {
-		t.Fatalf("Failed to query account1: %v", err)
-	}
-	if sqliteAccount1.ID != account1.ID {
-		t.Errorf("Account1 ID: expected %d, got %d", account1.ID, sqliteAccount1.ID)
-	}
-	if sqliteAccount1.UserID != account1.UserID {
-		t.Errorf("Account1 UserID: expected %d, got %d", account1.UserID, sqliteAccount1.UserID)
-	}
-	if sqliteAccount1.Email.String != account1.Email.String {
-		t.Errorf("Account1 Email: expected %s, got %s", account1.Email.String, sqliteAccount1.Email.String)
-	}
-	if sqliteAccount1.Password.String != account1.Password.String {
-		t.Errorf("Account1 Password: expected %s, got %s", account1.Password.String, sqliteAccount1.Password.String)
-	}
-	if sqliteAccount1.CreatedAt.Unix() != account1.CreatedAt.Unix() {
-		t.Errorf("Account1 CreatedAt: expected %v, got %v", account1.CreatedAt, sqliteAccount1.CreatedAt)
-	}
-	if sqliteAccount1.UpdatedAt.Unix() != account1.UpdatedAt.Unix() {
-		t.Errorf("Account1 UpdatedAt: expected %v, got %v", account1.UpdatedAt, sqliteAccount1.UpdatedAt)
-	}
-
-	// Verify account2
-	var sqliteAccount2 SqliteAccount
-	if err := sqliteDB.Where("user_id = ?", user2.ID).First(&sqliteAccount2).Error; err != nil {
-		t.Fatalf("Failed to query account2: %v", err)
-	}
-	if sqliteAccount2.Email.String != account2.Email.String {
-		t.Errorf("Account2 Email: expected %s, got %s", account2.Email.String, sqliteAccount2.Email.String)
+	if sqliteUser2.Email.String != account2.Email.String {
+		t.Errorf("User2 Email: expected %s, got %s", account2.Email.String, sqliteUser2.Email.String)
 	}
 
 	// Verify book1

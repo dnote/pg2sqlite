@@ -8,7 +8,6 @@ import (
 
 type MigrationStats struct {
 	Users    int
-	Accounts int
 	Books    int
 	Notes    int
 	Tokens   int
@@ -28,19 +27,12 @@ func migrate(pgDB, sqliteDB *sql.DB) error {
 
 	var stats MigrationStats
 
-	// Migrate users
+	// Migrate users (with email/password from accounts table)
 	fmt.Println("Migrating users...")
 	if err := migrateUsers(pgDB, tx, &stats); err != nil {
 		return fmt.Errorf("migrating users: %w", err)
 	}
 	fmt.Printf("  Migrated %d users\n", stats.Users)
-
-	// Migrate accounts
-	fmt.Println("Migrating accounts...")
-	if err := migrateAccounts(pgDB, tx, &stats); err != nil {
-		return fmt.Errorf("migrating accounts: %w", err)
-	}
-	fmt.Printf("  Migrated %d accounts\n", stats.Accounts)
 
 	// Migrate books
 	fmt.Println("Migrating books...")
@@ -78,7 +70,6 @@ func migrate(pgDB, sqliteDB *sql.DB) error {
 	// Print summary
 	fmt.Println("\nMigration Summary:")
 	fmt.Printf("  Users:    %d\n", stats.Users)
-	fmt.Printf("  Accounts: %d\n", stats.Accounts)
 	fmt.Printf("  Books:    %d\n", stats.Books)
 	fmt.Printf("  Notes:    %d\n", stats.Notes)
 	fmt.Printf("  Tokens:   %d\n", stats.Tokens)
@@ -89,9 +80,12 @@ func migrate(pgDB, sqliteDB *sql.DB) error {
 
 func migrateUsers(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 	rows, err := pgDB.Query(`
-		SELECT id, created_at, updated_at, uuid, last_login_at, max_usn, cloud
-		FROM users
-		ORDER BY id
+		SELECT
+			u.id, u.created_at, u.updated_at, u.uuid, u.last_login_at, u.max_usn,
+			a.email, a.password
+		FROM users u
+		LEFT JOIN accounts a ON u.id = a.user_id
+		ORDER BY u.id
 	`)
 	if err != nil {
 		return err
@@ -99,8 +93,8 @@ func migrateUsers(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 	defer rows.Close()
 
 	stmt, err := tx.Prepare(`
-		INSERT INTO users (id, created_at, updated_at, uuid, last_login_at, max_usn)
-		VALUES (?, ?, ?, ?, ?, ?)
+		INSERT INTO users (id, created_at, updated_at, uuid, last_login_at, max_usn, email, password)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 	if err != nil {
 		return err
@@ -112,54 +106,16 @@ func migrateUsers(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
 		var createdAt, updatedAt time.Time
 		var uuid string
 		var lastLoginAt sql.NullTime
-		var cloud bool // Read but ignore
+		var email, password sql.NullString
 
-		if err := rows.Scan(&id, &createdAt, &updatedAt, &uuid, &lastLoginAt, &maxUSN, &cloud); err != nil {
+		if err := rows.Scan(&id, &createdAt, &updatedAt, &uuid, &lastLoginAt, &maxUSN, &email, &password); err != nil {
 			return err
 		}
 
-		if _, err := stmt.Exec(id, createdAt, updatedAt, uuid, lastLoginAt, maxUSN); err != nil {
+		if _, err := stmt.Exec(id, createdAt, updatedAt, uuid, lastLoginAt, maxUSN, email, password); err != nil {
 			return err
 		}
 		stats.Users++
-	}
-
-	return rows.Err()
-}
-
-func migrateAccounts(pgDB *sql.DB, tx *sql.Tx, stats *MigrationStats) error {
-	rows, err := pgDB.Query(`
-		SELECT id, created_at, updated_at, user_id, email, password
-		FROM accounts
-		ORDER BY id
-	`)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	stmt, err := tx.Prepare(`
-		INSERT INTO accounts (id, created_at, updated_at, user_id, email, password)
-		VALUES (?, ?, ?, ?, ?, ?)
-	`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	for rows.Next() {
-		var id, userID int
-		var createdAt, updatedAt time.Time
-		var email, password sql.NullString
-
-		if err := rows.Scan(&id, &createdAt, &updatedAt, &userID, &email, &password); err != nil {
-			return err
-		}
-
-		if _, err := stmt.Exec(id, createdAt, updatedAt, userID, email, password); err != nil {
-			return err
-		}
-		stats.Accounts++
 	}
 
 	return rows.Err()
